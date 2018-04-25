@@ -54,8 +54,8 @@ CAT = ['n02121808', 'n02124075', 'n02123394', 'n02122298', 'n02123159',
        'n02123478', 'n02122725', 'n02123597', 'n02124484', 'n02124157',
        'n02122878', 'n02123917', 'n02122510', 'n02124313', 'n02123045',
        'n02123242', 'n02122430']
-CLASS_DIC = {'dog': DOG, 'cat': CAT}
-
+#CLASS_DIC = {'dog': DOG, 'cat': CAT}
+CLASS_DIC = {'all': ['all']}
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a GAN network')
@@ -115,6 +115,12 @@ if __name__ == "__main__":
         dataset = LSUNClass('%s/%s_%s_lmdb' %
                             (cfg.DATA_DIR, cfg.DATASET_NAME, split_dir),
                             base_size=cfg.TREE.BASE_SIZE, transform=image_transform)
+    elif cfg.DATA_DIR.find('xray') != -1:
+        from datasets import ImageFolder
+        dataset = ImageFolder(cfg.DATA_DIR, split_dir='train',
+                              custom_classes=CLASS_DIC[cfg.DATASET_NAME],
+                              base_size=cfg.TREE.BASE_SIZE,
+                              transform=image_transform)
     elif cfg.DATA_DIR.find('imagenet') != -1:
         from datasets import ImageFolder
         dataset = ImageFolder(cfg.DATA_DIR, split_dir='train',
