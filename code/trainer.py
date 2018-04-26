@@ -203,8 +203,8 @@ def save_img_results(imgs_tcpu, fake_imgs, num_imgs,
     real_img_set = np.transpose(real_img_set, (1, 2, 0))
     real_img_set = real_img_set * 255
     real_img_set = real_img_set.astype(np.uint8)
-    sup_real_img = summary.image('real_img', real_img_set)
-    summary_writer.add_summary(sup_real_img, count)
+    #sup_real_img = summary.image('real_img', real_img_set)
+    #summary_writer.add_summary(sup_real_img, count)
 
     for i in range(num_imgs):
         fake_img = fake_imgs[i][0:num]
@@ -220,9 +220,9 @@ def save_img_results(imgs_tcpu, fake_imgs, num_imgs,
         fake_img_set = (fake_img_set + 1) * 255 / 2
         fake_img_set = fake_img_set.astype(np.uint8)
 
-        sup_fake_img = summary.image('fake_img%d' % i, fake_img_set)
-        summary_writer.add_summary(sup_fake_img, count)
-        summary_writer.flush()
+        #sup_fake_img = summary.image('fake_img%d' % i, fake_img_set)
+        #summary_writer.add_summary(sup_fake_img, count)
+        #summary_writer.flush()
 
 
 # ################## For uncondional tasks ######################### #
@@ -401,9 +401,9 @@ class GANTrainer(object):
                 for p, avg_p in zip(self.netG.parameters(), avg_param_G):
                     avg_p.mul_(0.999).add_(0.001, p.data)
 
-                # for inception score
-                pred = self.inception_model(self.fake_imgs[-1].detach())
-                predictions.append(pred.data.cpu().numpy())
+                ## for inception score
+                #pred = self.inception_model(self.fake_imgs[-1].detach())
+                #predictions.append(pred.data.cpu().numpy())
 
                 if count % 100 == 0:
                     summary_D = summary.scalar('D_loss', errD_total.data[0])
@@ -429,20 +429,20 @@ class GANTrainer(object):
                     #
                     load_params(self.netG, backup_para)
 
-                    # Compute inception score
-                    if len(predictions) > 500:
-                        predictions = np.concatenate(predictions, 0)
-                        mean, std = compute_inception_score(predictions, 10)
-                        # print('mean:', mean, 'std', std)
-                        m_incep = summary.scalar('Inception_mean', mean)
-                        self.summary_writer.add_summary(m_incep, count)
-                        #
-                        mean_nlpp, std_nlpp = \
-                            negative_log_posterior_probability(predictions, 10)
-                        m_nlpp = summary.scalar('NLPP_mean', mean_nlpp)
-                        self.summary_writer.add_summary(m_nlpp, count)
-                        #
-                        predictions = []
+                    ## Compute inception score
+                    #if len(predictions) > 500:
+                    #    predictions = np.concatenate(predictions, 0)
+                    #    mean, std = compute_inception_score(predictions, 10)
+                    #    # print('mean:', mean, 'std', std)
+                    #    m_incep = summary.scalar('Inception_mean', mean)
+                    #    self.summary_writer.add_summary(m_incep, count)
+                    #    #
+                    #    mean_nlpp, std_nlpp = \
+                    #        negative_log_posterior_probability(predictions, 10)
+                    #    m_nlpp = summary.scalar('NLPP_mean', mean_nlpp)
+                    #    self.summary_writer.add_summary(m_nlpp, count)
+                    #    #
+                    #    predictions = []
 
             end_t = time.time()
             print('Total Time: %.2fsec' % (end_t - start_t))
