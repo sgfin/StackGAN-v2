@@ -23,7 +23,7 @@ TRAIN:
       UNCOND_LOSS: 1.0
 #    COEFF:
 #      COLOR_LOSS: 50.0  # 1.0
-
+#
 
 GAN:
     DF_DIM: 64
