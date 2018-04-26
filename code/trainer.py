@@ -416,18 +416,18 @@ class GANTrainer(object):
                               errD_total.data[0], errG_total.data[0]))
                 count = count + 1
 
-                if count % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:
-                    save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
-                    save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
-                    # Save images
-                    backup_para = copy_G_params(self.netG)
-                    load_params(self.netG, avg_param_G)
-                    #
-                    self.fake_imgs, _, _ = self.netG(fixed_noise)
-                    save_img_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
-                                    count, self.image_dir, self.summary_writer)
-                    #
-                    load_params(self.netG, backup_para)
+                #if count % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:
+                #    save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+                #    save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+                #    # Save images
+                #    backup_para = copy_G_params(self.netG)
+                #    load_params(self.netG, avg_param_G)
+                #    #
+                #    self.fake_imgs, _, _ = self.netG(fixed_noise)
+                #    save_img_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
+                #                    count, self.image_dir, self.summary_writer)
+                #    #
+                #    load_params(self.netG, backup_para)
 
                     ## Compute inception score
                     #if len(predictions) > 500:
@@ -443,6 +443,16 @@ class GANTrainer(object):
                     #    self.summary_writer.add_summary(m_nlpp, count)
                     #    #
                     #    predictions = []
+
+            # Save images
+            backup_para = copy_G_params(self.netG)
+            load_params(self.netG, avg_param_G)
+            #
+            self.fake_imgs, _, _ = self.netG(fixed_noise)
+            save_img_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
+                            count, self.image_dir, self.summary_writer)
+            #
+            load_params(self.netG, backup_para)
 
             end_t = time.time()
             print('Total Time: %.2fsec' % (end_t - start_t))
