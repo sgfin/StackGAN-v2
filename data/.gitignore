@@ -1,3 +1,5 @@
+*.txt
+CUB*
 xray
 !README.md
 !.gitignore

@@ -294,6 +294,7 @@ class GANTrainer(object):
     def train_Gnet(self, count):
         self.netG.zero_grad()
         errG_total = 0
+        self.list_errGs = self.num_Ds*[0]
         flag = count % 100
         batch_size = self.real_imgs[0].size(0)
         criterion = self.criterion
@@ -303,6 +304,7 @@ class GANTrainer(object):
             netD = self.netsD[i]
             outputs = netD(self.fake_imgs[i])
             errG = criterion(outputs[0], real_labels)
+            self.list_errGs[i] = errG
             # errG = self.stage_coeff[i] * errG
             errG_total = errG_total + errG
             if flag == 0:
@@ -374,6 +376,7 @@ class GANTrainer(object):
         for epoch in range(start_epoch, self.max_epoch):
             start_t = time.time()
 
+            self.list_errDs = self.num_Ds*[0]
             for step, data in enumerate(self.data_loader, 0):
                 #######################################################
                 # (0) Prepare training data
@@ -392,6 +395,7 @@ class GANTrainer(object):
                 errD_total = 0
                 for i in range(self.num_Ds):
                     errD = self.train_Dnet(i, count)
+                    self.list_errDs[i] = errD
                     errD_total += errD
 
                 #######################################################
@@ -414,6 +418,9 @@ class GANTrainer(object):
                     print('''[%d/%d][%d/%d] Loss_D: %.2f Loss_G: %.2f'''
                            % (epoch, self.max_epoch, step, self.num_batches,
                               errD_total.data[0], errG_total.data[0]))
+                    for i in range(self.num_Ds):
+                        print('''Loss_D%d: %.3f LossG%d: %.3f'''
+                        % (i, self.list_errDs[i].data[0], i, self.list_errGs[i].data[0]))
                 count = count + 1
 
                 #if count % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:
@@ -457,8 +464,8 @@ class GANTrainer(object):
             end_t = time.time()
             print('Total Time: %.2fsec' % (end_t - start_t))
 
-        save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
-        save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+            save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+            save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
 
         self.summary_writer.close()
 
