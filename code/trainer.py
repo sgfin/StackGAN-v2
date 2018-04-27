@@ -464,8 +464,9 @@ class GANTrainer(object):
             end_t = time.time()
             print('Total Time: %.2fsec' % (end_t - start_t))
 
-            save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
-            save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+            if epoch % 50 == 0:
+                save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+                save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
 
         self.summary_writer.close()
 
