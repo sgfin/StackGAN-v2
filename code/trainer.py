@@ -304,7 +304,7 @@ class GANTrainer(object):
             netD = self.netsD[i]
             outputs = netD(self.fake_imgs[i])
             errG = criterion(outputs[0], real_labels)
-            self.list_errGs[i] = errG
+            self.list_errGs[i] = errG.data[0]
             # errG = self.stage_coeff[i] * errG
             errG_total = errG_total + errG
             if flag == 0:
@@ -395,7 +395,7 @@ class GANTrainer(object):
                 errD_total = 0
                 for i in range(self.num_Ds):
                     errD = self.train_Dnet(i, count)
-                    self.list_errDs[i] = errD
+                    self.list_errDs[i] = errD.data[0]
                     errD_total += errD
 
                 #######################################################
@@ -420,7 +420,7 @@ class GANTrainer(object):
                               errD_total.data[0], errG_total.data[0]))
                     for i in range(self.num_Ds):
                         print('''Loss_D%d: %.3f LossG%d: %.3f'''
-                        % (i, self.list_errDs[i].data[0], i, self.list_errGs[i].data[0]))
+                        % (i, self.list_errDs[i], i, self.list_errGs[i]))
                 count = count + 1
 
                 #if count % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:
