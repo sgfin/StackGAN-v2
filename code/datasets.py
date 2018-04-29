@@ -39,6 +39,7 @@ def is_image_file(filename):
 
 def get_imgs(img_path, imsize, bbox=None,
              transform=None, normalize=None):
+    #img = Image.open(img_path).convert('RGB')
     img = Image.open(img_path).convert('L')
     img = img.resize((256,256), Image.BILINEAR)
     width, height = img.size
@@ -55,7 +56,7 @@ def get_imgs(img_path, imsize, bbox=None,
     if transform is not None:
         img = transform(img)
 
-    img = img.point(lambda i: i / 255.)
+    #img = img.point(lambda i: i / 255.)
     #print("size", img.size)
     #print("min, max", img.getextrema())
     ret = []
