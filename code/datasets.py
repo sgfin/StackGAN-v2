@@ -55,6 +55,9 @@ def get_imgs(img_path, imsize, bbox=None,
     if transform is not None:
         img = transform(img)
 
+    img = img.point(lambda i: i / 255.)
+    #print("size", img.size)
+    #print("min, max", img.getextrema())
     ret = []
     for i in range(cfg.TREE.BRANCH_NUM):
         if i < (cfg.TREE.BRANCH_NUM - 1):
@@ -62,6 +65,8 @@ def get_imgs(img_path, imsize, bbox=None,
         else:
             re_img = img
         ret.append(normalize(re_img))
+        #print(i, "size", re_img.size)
+        #print(i, "min, max", re_img.getextrema())
 
     return ret
 

@@ -120,7 +120,8 @@ if __name__ == "__main__":
         dataset = ImageFolder(cfg.DATA_DIR, split_dir='train',
                               custom_classes=CLASS_DIC[cfg.DATASET_NAME],
                               base_size=cfg.TREE.BASE_SIZE,
-                              transform=image_transform)
+                              transform=None)
+                              #transform=image_transform)
     elif cfg.DATA_DIR.find('imagenet') != -1:
         from datasets import ImageFolder
         dataset = ImageFolder(cfg.DATA_DIR, split_dir='train',
