@@ -116,12 +116,20 @@ if __name__ == "__main__":
                             (cfg.DATA_DIR, cfg.DATASET_NAME, split_dir),
                             base_size=cfg.TREE.BASE_SIZE, transform=image_transform)
     elif cfg.DATA_DIR.find('xray') != -1:
-        from datasets import ImageFolder
-        dataset = ImageFolder(cfg.DATA_DIR, split_dir='train',
-                              custom_classes=CLASS_DIC[cfg.DATASET_NAME],
-                              base_size=cfg.TREE.BASE_SIZE,
-                              transform=None)
-                              #transform=image_transform)
+        if not cfg.GAN.B_CONDITION:
+            from datasets import XrayUncondDataset
+            dataset = XrayUncondDataset(cfg.DATA_DIR, split_dir='train',
+                                  custom_classes=CLASS_DIC[cfg.DATASET_NAME],
+                                  base_size=cfg.TREE.BASE_SIZE,
+                                  transform=None)
+                                  #transform=image_transform)
+        else:
+            from datasets import XrayBinaryCondDataset
+            dataset = XrayBinaryCondDataset(cfg.DATA_DIR, split_dir,
+                                  base_size=cfg.TREE.BASE_SIZE,
+                                  condition=cfg.COND_TYPE,
+                                  transform=None)
+                                  #transform=image_transform)
     elif cfg.DATA_DIR.find('imagenet') != -1:
         from datasets import ImageFolder
         dataset = ImageFolder(cfg.DATA_DIR, split_dir='train',
@@ -133,6 +141,7 @@ if __name__ == "__main__":
         dataset = TextDataset(cfg.DATA_DIR, split_dir,
                               base_size=cfg.TREE.BASE_SIZE,
                               transform=image_transform)
+
     assert dataset
     num_gpu = len(cfg.GPU_ID.split(','))
     dataloader = torch.utils.data.DataLoader(
