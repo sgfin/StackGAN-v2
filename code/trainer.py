@@ -224,6 +224,40 @@ def save_img_results(imgs_tcpu, fake_imgs, num_imgs,
         #summary_writer.add_summary(sup_fake_img, count)
         #summary_writer.flush()
 
+def save_img_cond_results(imgs_tcpu, fake_imgs, num_imgs,
+                     count, image_dir, summary_writer, cond):
+    num = cfg.TRAIN.VIS_COUNT
+
+    # The range of real_img (i.e., self.imgs_tcpu[i][0:num])
+    # is changed to [0, 1] by function vutils.save_image
+    real_img = imgs_tcpu[-1][0:num]
+    vutils.save_image(
+        real_img, '%s/real_samples.png' % (image_dir),
+        normalize=True)
+    real_img_set = vutils.make_grid(real_img).numpy()
+    real_img_set = np.transpose(real_img_set, (1, 2, 0))
+    real_img_set = real_img_set * 255
+    real_img_set = real_img_set.astype(np.uint8)
+    #sup_real_img = summary.image('real_img', real_img_set)
+    #summary_writer.add_summary(sup_real_img, count)
+
+    for i in range(num_imgs):
+        fake_img = fake_imgs[i][0:num]
+        # The range of fake_img.data (i.e., self.fake_imgs[i][0:num])
+        # is still [-1. 1]...
+        vutils.save_image(
+            fake_img.data, '%s/count_%09d_fake_samples%d_class_%d.png' %
+            (image_dir, count, i, cond), normalize=True)
+
+        fake_img_set = vutils.make_grid(fake_img.data).cpu().numpy()
+
+        fake_img_set = np.transpose(fake_img_set, (1, 2, 0))
+        fake_img_set = (fake_img_set + 1) * 255 / 2
+        fake_img_set = fake_img_set.astype(np.uint8)
+
+        #sup_fake_img = summary.image('fake_img%d' % i, fake_img_set)
+        #summary_writer.add_summary(sup_fake_img, count)
+        #summary_writer.flush()
 
 # ################## For uncondional tasks ######################### #
 class GANTrainer(object):
@@ -747,9 +781,9 @@ class condGANTrainer(object):
                 for p, avg_p in zip(self.netG.parameters(), avg_param_G):
                     avg_p.mul_(0.999).add_(0.001, p.data)
 
-                # for inception score
-                pred = self.inception_model(self.fake_imgs[-1].detach())
-                predictions.append(pred.data.cpu().numpy())
+                ## for inception score
+                #pred = self.inception_model(self.fake_imgs[-1].detach())
+                #predictions.append(pred.data.cpu().numpy())
 
                 if count % 100 == 0:
                     summary_D = summary.scalar('D_loss', errD_total.data[0])
@@ -762,32 +796,47 @@ class condGANTrainer(object):
                 count = count + 1
 
                 if count % cfg.TRAIN.SNAPSHOT_INTERVAL == 0:
-                    save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
+                    #save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
                     # Save images
                     backup_para = copy_G_params(self.netG)
                     load_params(self.netG, avg_param_G)
                     #
+                    #self.fake_imgs, _, _ = \
+                    #    self.netG(fixed_noise, self.txt_embedding)
+                    #save_img_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
+                    #                 count, self.image_dir, self.summary_writer)
+
+                    # Generate conditioned samples
+                    # class 0
+                    txt_embedding_class0 = Variable(torch.zeros(self.batch_size, 1)).cuda()
                     self.fake_imgs, _, _ = \
-                        self.netG(fixed_noise, self.txt_embedding)
-                    save_img_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
-                                     count, self.image_dir, self.summary_writer)
+                        self.netG(fixed_noise, txt_embedding_class0)
+                    save_img_cond_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
+                                     count, self.image_dir, self.summary_writer, 0)
+
+                    # class 1
+                    txt_embedding_class1 = Variable(torch.ones(self.batch_size, 1)).cuda()
+                    self.fake_imgs, _, _ = \
+                        self.netG(fixed_noise, txt_embedding_class1)
+                    save_img_cond_results(self.imgs_tcpu, self.fake_imgs, self.num_Ds,
+                                     count, self.image_dir, self.summary_writer, 1)
                     #
                     load_params(self.netG, backup_para)
 
-                    # Compute inception score
-                    if len(predictions) > 500:
-                        predictions = np.concatenate(predictions, 0)
-                        mean, std = compute_inception_score(predictions, 10)
-                        # print('mean:', mean, 'std', std)
-                        m_incep = summary.scalar('Inception_mean', mean)
-                        self.summary_writer.add_summary(m_incep, count)
-                        #
-                        mean_nlpp, std_nlpp = \
-                            negative_log_posterior_probability(predictions, 10)
-                        m_nlpp = summary.scalar('NLPP_mean', mean_nlpp)
-                        self.summary_writer.add_summary(m_nlpp, count)
-                        #
-                        predictions = []
+                    ## Compute inception score
+                    #if len(predictions) > 500:
+                    #    predictions = np.concatenate(predictions, 0)
+                    #    mean, std = compute_inception_score(predictions, 10)
+                    #    # print('mean:', mean, 'std', std)
+                    #    m_incep = summary.scalar('Inception_mean', mean)
+                    #    self.summary_writer.add_summary(m_incep, count)
+                    #    #
+                    #    mean_nlpp, std_nlpp = \
+                    #        negative_log_posterior_probability(predictions, 10)
+                    #    m_nlpp = summary.scalar('NLPP_mean', mean_nlpp)
+                    #    self.summary_writer.add_summary(m_nlpp, count)
+                    #    #
+                    #    predictions = []
 
             end_t = time.time()
             print('''[%d/%d][%d]
@@ -796,6 +845,10 @@ class condGANTrainer(object):
                   % (epoch, self.max_epoch, self.num_batches,
                      errD_total.data[0], errG_total.data[0],
                      kl_loss.data[0], end_t - start_t))
+
+
+            if epoch % 50 == 50-1:
+                save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
 
         save_model(self.netG, avg_param_G, self.netsD, count, self.model_dir)
         self.summary_writer.close()
