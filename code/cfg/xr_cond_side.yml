@@ -1,33 +1,42 @@
-CONFIG_NAME: '1stage'
+CONFIG_NAME: 'xr_cond_side'
 
 DATASET_NAME: 'all'
-DATA_DIR: '../data/xray'
-GPU_ID: '3'
+#DATA_DIR: '../data/xray'
+DATA_DIR: '../data/xray_flip'
+GPU_ID: '0'
 WORKERS: 4  # 4
 
-TREE:
-    BRANCH_NUM: 1
+#COND_TYPE: 'FRACTURE'
+COND_TYPE: 'SIDE'
 
+TREE:
+    BRANCH_NUM: 3
 
 TRAIN:
     FLAG: True
     NET_G: ''  # '../output/dog_3stages_color/Model/netG_50000.pth'
     NET_D: ''  # '../output/dog_3stages_color/Model/netD'
     BATCH_SIZE: 24
-    MAX_EPOCH: 100
+    MAX_EPOCH: 300
     SNAPSHOT_INTERVAL: 100
     DISCRIMINATOR_LR: 0.0002
-    GENERATOR_LR: 0.005
+    GENERATOR_LR: 0.0002
     #GENERATOR_LR: 0.0002
-#    COEFF:
-#      UNCOND_LOSS: 1.0
+    COEFF:
+      #UNCOND_LOSS: 0.2
+      UNCOND_LOSS: 0.0
+      #UNCOND_LOSS: 1.0
 #    COEFF:
 #      COLOR_LOSS: 50.0  # 1.0
 
 
 GAN:
+    EMBEDDING_DIM: 128
     DF_DIM: 64
     GF_DIM: 64
     Z_DIM: 100
     R_NUM: 2
-    B_CONDITION: False
+    B_CONDITION: True
+
+TEXT:
+    DIMENSION: 1
