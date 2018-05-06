@@ -516,7 +516,7 @@ class XrayBinaryCondDataset(data.Dataset):
         if self.target_transform is not None:
             embedding = self.target_transform(embedding)
 
-        #print(index, key, wrong_key, label, embedding)
+        #print(index,"key: ",  key, "wrong key: ", wrong_key, label, embedding)
 
         return imgs, wrong_imgs, embedding, key  # captions
 

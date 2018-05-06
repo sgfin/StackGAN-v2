@@ -61,6 +61,8 @@ __C.GAN.NETWORK_TYPE = 'default'
 __C.GAN.R_NUM = 2
 __C.GAN.B_CONDITION = False
 
+__C.GAN.USE_EMBEDDING = True
+
 __C.TEXT = edict()
 __C.TEXT.DIMENSION = 1024
 

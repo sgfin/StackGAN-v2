@@ -37,6 +37,6 @@ GAN:
     Z_DIM: 100
     R_NUM: 2
     B_CONDITION: True
-
+    USE_EMBEDDING: False
 TEXT:
     DIMENSION: 1

@@ -259,8 +259,12 @@ class G_NET(nn.Module):
             self.img_net4 = GET_IMAGE_G(self.gf_dim // 16)
 
     def forward(self, z_code, text_embedding=None):
-        if cfg.GAN.B_CONDITION and text_embedding is not None:
+	if not cfg.GAN.USE_EMBEDDING:
+            c_code = text_embedding.expand(cfg.TRAIN.BATCH_SIZE, cfg.GAN.EMBEDDING_DIM).contiguous()
+            mu, logvar = None, None
+        elif cfg.GAN.B_CONDITION and text_embedding is not None:
             c_code, mu, logvar = self.ca_net(text_embedding)
+           # print("text: ", text_embedding, "c_code: ", c_code)
         else:
             c_code, mu, logvar = z_code, None, None
         fake_imgs = []
