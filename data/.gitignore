@@ -1,8 +1,0 @@
-*.py
-*.txt
-CUB*
-xray
-xray_flip
-*.sw*
-!README.md
-!.gitignore

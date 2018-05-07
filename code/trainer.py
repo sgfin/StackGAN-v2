@@ -709,7 +709,10 @@ class condGANTrainer(object):
                     sum_cov = summary.scalar('G_like_cov1', like_cov1.data[0])
                     self.summary_writer.add_summary(sum_cov, count)
 
-        kl_loss = KL_loss(mu, logvar) * cfg.TRAIN.COEFF.KL
+        if cfg.GAN.USE_EMBEDDING:
+            kl_loss = KL_loss(mu, logvar) * cfg.TRAIN.COEFF.KL
+        else:
+            kl_loss = torch.zeros_like(errG_total).cuda()
         errG_total = errG_total + kl_loss
         errG_total.backward()
         self.optimizerG.step()
