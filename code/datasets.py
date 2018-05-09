@@ -38,9 +38,12 @@ def is_image_file(filename):
 
 
 def get_imgs(img_path, imsize, bbox=None,
-             transform=None, normalize=None):
+             transform=None, normalize=None,
+             flip = False):
     #img = Image.open(img_path).convert('RGB')
     img = Image.open(img_path).convert('L')
+    if flip:
+        img = img.transpose(Image.FLIP_LEFT_RIGHT)
     dim = 2**cfg.TREE.BRANCH_NUM * 32
     img = img.resize((dim,dim), Image.BILINEAR)
     width, height = img.size
@@ -481,13 +484,19 @@ class XrayBinaryCondDataset(data.Dataset):
 
     def prepair_training_pairs(self, index):
         key = self.filenames[index]
-        label = self.class_id[index]
-        if self.bbox is not None:
-            bbox = self.bbox[key]
-            data_dir = '%s/CUB_200_2011' % self.data_dir
-        else:
+
+        if cfg.COND_TYPE == 'SIDE':
+            label = 0
             bbox = None
             data_dir = self.data_dir
+        else:
+            label = self.class_id[index]
+            if self.bbox is not None:
+                bbox = self.bbox[key]
+                data_dir = '%s/CUB_200_2011' % self.data_dir
+            else:
+                bbox = None
+                data_dir = self.data_dir
         # captions = self.captions[key]
         #embeddings = self.embeddings[index, :, :]
 
@@ -496,20 +505,35 @@ class XrayBinaryCondDataset(data.Dataset):
         imgs = get_imgs(img_name, self.imsize,
                         bbox, self.transform, normalize=self.norm)
 
-        wrong_ix = random.choice(self.dict_idx_by_class[1-label])
-        #wrong_ix = random.randint(0, len(self.filenames) - 1)
-        #if(label == self.class_id[wrong_ix]):
-        #    wrong_ix = random.randint(0, len(self.filenames) - 1)
-        wrong_key = self.filenames[wrong_ix]
-        if self.bbox is not None:
-            wrong_bbox = self.bbox[wrong_key]
-        else:
-            wrong_bbox = None
-        wrong_img_name = '%s/train/all/%s' % (data_dir, wrong_key)
-        #wrong_img_name = '%s/images/%s.jpg' % (data_dir, wrong_key)
-        wrong_imgs = get_imgs(wrong_img_name, self.imsize,
-                              wrong_bbox, self.transform, normalize=self.norm)
 
+        flipResults = False
+        if cfg.COND_TYPE == 'SIDE':
+            # Create flipped image
+             wrong_imgs = get_imgs(img_name, self.imsize,
+                            bbox, self.transform, normalize=self.norm,
+                            flip = True)
+
+            #  As written, all "correct" images will be left image, so flip right/wrong with 50%
+             if random.random() < 0.5:
+                flipResults = True
+                label = 1 - label
+
+        else:
+
+            wrong_ix = random.choice(self.dict_idx_by_class[1-label])
+            #wrong_ix = random.randint(0, len(self.filenames) - 1)
+            #if(label == self.class_id[wrong_ix]):
+            #    wrong_ix = random.randint(0, len(self.filenames) - 1)
+            wrong_key = self.filenames[wrong_ix]
+            if self.bbox is not None:
+                wrong_bbox = self.bbox[wrong_key]
+            else:
+                wrong_bbox = None
+            wrong_img_name = '%s/train/all/%s' % (data_dir, wrong_key)
+            #wrong_img_name = '%s/images/%s.jpg' % (data_dir, wrong_key)
+            wrong_imgs = get_imgs(wrong_img_name, self.imsize,
+                                  wrong_bbox, self.transform, normalize=self.norm)                    
+                
         #embedding_ix = random.randint(0, embeddings.shape[0] - 1)
         #embedding = embeddings[embedding_ix, :]
         embedding = np.array([label]).astype(np.float32)
@@ -517,7 +541,9 @@ class XrayBinaryCondDataset(data.Dataset):
             embedding = self.target_transform(embedding)
 
         #print(index,"key: ",  key, "wrong key: ", wrong_key, label, embedding)
-
+                
+        if flipResults:
+            return wrong_imgs,  imgs, embedding, key
         return imgs, wrong_imgs, embedding, key  # captions
 
     def prepair_test_pairs(self, index):

@@ -615,6 +615,12 @@ class condGANTrainer(object):
         return imgs, real_vimgs, wrong_vimgs, vembedding
 
     def train_Dnet(self, idx, count):
+        # self.list_cond_real_errDs = self.num_Ds*[0]
+        # self.list_cond_wrong_errDs = self.num_Ds*[0]
+        # self.list_cond_fake_errDs = self.num_Ds*[0]
+        # self.list_uncond_real_errDs = self.num_Ds*[0]
+        # self.list_uncond_wrong_errDs = self.num_Ds*[0]
+        # self.list_uncond_fake_errDs = self.num_Ds*[0]
         flag = count % 100
         batch_size = self.real_imgs[0].size(0)
         criterion, mu = self.criterion, self.mu
@@ -643,7 +649,14 @@ class condGANTrainer(object):
                 criterion(wrong_logits[1], real_labels)
             errD_fake_uncond = cfg.TRAIN.COEFF.UNCOND_LOSS * \
                 criterion(fake_logits[1], fake_labels)
-            #
+            # Save intermediate error values
+            self.errD_cond_real = errD_real.data[0]
+            self.errD_cond_wrong = errD_wrong.data[0]
+            self.errD_cond_fake = errD_fake.data[0]
+            self.errD_uncond_real = errD_real_uncond.data[0]
+            self.errD_uncond_wrong = errD_wrong_uncond.data[0]
+            self.errD_uncond_fake = errD_fake_uncond.data[0]
+
             errD_real = errD_real + errD_real_uncond
             errD_wrong = errD_wrong + errD_wrong_uncond
             errD_fake = errD_fake + errD_fake_uncond
@@ -664,6 +677,7 @@ class condGANTrainer(object):
     def train_Gnet(self, count):
         self.netG.zero_grad()
         errG_total = 0
+        self.list_errGs = self.num_Ds*[0]
         flag = count % 100
         batch_size = self.real_imgs[0].size(0)
         criterion, mu, logvar = self.criterion, self.mu, self.logvar
@@ -675,6 +689,7 @@ class condGANTrainer(object):
                 errG_patch = cfg.TRAIN.COEFF.UNCOND_LOSS *\
                     criterion(outputs[1], real_labels)
                 errG = errG + errG_patch
+            self.list_errGs[i] = errG.data[0]
             errG_total = errG_total + errG
             if flag == 0:
                 summary_D = summary.scalar('G_loss%d' % i, errG.data[0])
@@ -755,6 +770,7 @@ class condGANTrainer(object):
         for epoch in range(start_epoch, self.max_epoch):
             start_t = time.time()
 
+            self.list_errDs = self.num_Ds*[0]
             for step, data in enumerate(self.data_loader, 0):
                 #######################################################
                 # (0) Prepare training data
@@ -775,6 +791,7 @@ class condGANTrainer(object):
                 errD_total = 0
                 for i in range(self.num_Ds):
                     errD = self.train_Dnet(i, count)
+                    self.list_errDs[i] = errD.data[0]
                     errD_total += errD
 
                 #######################################################
@@ -848,6 +865,14 @@ class condGANTrainer(object):
                   % (epoch, self.max_epoch, self.num_batches,
                      errD_total.data[0], errG_total.data[0],
                      kl_loss.data[0], end_t - start_t))
+
+            for i in range(self.num_Ds):
+                print('''Loss_D%d: %.3f LossG%d: %.3f'''
+                    % (i, self.list_errDs[i], i, self.list_errGs[i]))
+
+            print('cond_real={:.2f}, cond_wrong={:.2f}, cond_fake={:.2f}, uncond_real={:.2f}, uncond_wrong={:.2f}, uncond_fake={:.2f}'
+                .format(self.errD_cond_real, self.errD_cond_wrong, self.errD_cond_fake,
+                        self.errD_uncond_real, self.errD_uncond_wrong, self.errD_uncond_fake))
 
 
             if epoch % 50 == 50-1:

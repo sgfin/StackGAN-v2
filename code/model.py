@@ -259,13 +259,12 @@ class G_NET(nn.Module):
             self.img_net4 = GET_IMAGE_G(self.gf_dim // 16)
 
     def forward(self, z_code, text_embedding=None):
-	if not cfg.GAN.USE_EMBEDDING:
+        if not cfg.GAN.USE_EMBEDDING:
             c_code = text_embedding.expand(cfg.TRAIN.BATCH_SIZE, cfg.GAN.EMBEDDING_DIM).contiguous()
-            c_code = (c_code * 0.7)
-            noise = 0.3 * torch.cuda.FloatTensor(cfg.TRAIN.BATCH_SIZE, cfg.GAN.EMBEDDING_DIM).uniform_()
-            #print("noise: ", noise)
-            c_code = c_code + Variable(noise)
-            #print("c_code: ", c_code)
+            if cfg.GAN.NOISEY_LABEL:
+                c_code = (c_code * 0.7)
+                noise = 0.3 * torch.cuda.FloatTensor(cfg.TRAIN.BATCH_SIZE, cfg.GAN.EMBEDDING_DIM).uniform_()
+                c_code = c_code + Variable(noise)
             mu, logvar = c_code, None
         elif cfg.GAN.B_CONDITION and text_embedding is not None:
             c_code, mu, logvar = self.ca_net(text_embedding)

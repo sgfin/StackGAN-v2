@@ -60,6 +60,7 @@ __C.GAN.Z_DIM = 100
 __C.GAN.NETWORK_TYPE = 'default'
 __C.GAN.R_NUM = 2
 __C.GAN.B_CONDITION = False
+__C.GAN.NOISEY_LABEL = False
 
 __C.GAN.USE_EMBEDDING = True
 

@@ -95,8 +95,8 @@ if __name__ == "__main__":
 
     now = datetime.datetime.now(dateutil.tz.tzlocal())
     timestamp = now.strftime('%Y_%m_%d_%H_%M_%S')
-    output_dir = '../output/%s_%s_%s' % \
-        (cfg.DATASET_NAME, cfg.CONFIG_NAME, timestamp)
+    output_dir = '../output/%s_%s_LR_D_%s_LR_G_%s_time_%s' % \
+        (cfg.DATASET_NAME, cfg.CONFIG_NAME, cfg.TRAIN.DISCRIMINATOR_LR, cfg.TRAIN.GENERATOR_LR, timestamp)
 
     split_dir, bshuffle = 'train', True
     if not cfg.TRAIN.FLAG:
