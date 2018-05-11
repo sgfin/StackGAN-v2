@@ -521,10 +521,11 @@ class XrayBinaryCondDataset(data.Dataset):
         else:
 
             wrong_ix = random.choice(self.dict_idx_by_class[1-label])
+            wrong_key = self.filenames[wrong_ix]
             #wrong_ix = random.randint(0, len(self.filenames) - 1)
             #if(label == self.class_id[wrong_ix]):
             #    wrong_ix = random.randint(0, len(self.filenames) - 1)
-            wrong_key = self.filenames[wrong_ix]
+            
             if self.bbox is not None:
                 wrong_bbox = self.bbox[wrong_key]
             else:
